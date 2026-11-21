@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { COLOR, shade } from '../palette';
+import { COLOR } from '../palette';
+import { shade } from '../logic/color';
 
 const KEY = 'ground-paper';
 const SIZE = 512;
