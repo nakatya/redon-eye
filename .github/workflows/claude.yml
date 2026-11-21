@@ -1,0 +1,74 @@
+# Claude による実装ワークフロー
+#  - Issue に `approved` ラベルを付ける → Claude が実装して PR を作る(ストッパー①: 人が承認するまで実装しない)
+#  - Issue / PR のコメントで @claude と書く → その指示に対応する
+# どちらもリポジトリのオーナー / 書き込み権限のある人の操作でしか動かない。
+name: Claude
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+  actions: read
+
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  implement:
+    if: >
+      github.event_name == 'issues' &&
+      github.event.label.name == 'approved' &&
+      github.event.sender.login == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            リポジトリ ${{ github.repository }} の Issue #${{ github.event.issue.number }} を実装してください。
+            CLAUDE.md と docs/GAME_DESIGN.md に従うこと。
+            - ブランチ claude/issue-${{ github.event.issue.number }}-<短い説明> を作る
+            - 受け入れ条件をすべて満たし、npm run typecheck && npm test && npm run build を通す
+            - Closes #${{ github.event.issue.number }} を含む PR を作る
+            - CLAUDE.md の「止まって人に聞くべきこと」に当たる場合は、実装せずに Issue に質問を書き、needs-human ラベルを付けて終了する
+          claude_args: |
+            --max-turns 60
+            --allowedTools "Edit,Write,Read,Glob,Grep,Bash(npm:*),Bash(npx:*),Bash(git:*),Bash(gh pr:*),Bash(gh issue:*)"
+
+  respond:
+    if: >
+      (github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment') &&
+      contains(github.event.comment.body, '@claude') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: |
+            --max-turns 40
+            --allowedTools "Edit,Write,Read,Glob,Grep,Bash(npm:*),Bash(npx:*),Bash(git:*),Bash(gh pr:*),Bash(gh issue:*)"

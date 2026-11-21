@@ -1,0 +1,6 @@
+# ここに挙げたファイルの変更は、必ずオーナーのレビューが必要(ブランチ保護で「Require review from Code Owners」をオン)
+# OWNER を自分の GitHub ユーザー名に置き換えてください
+/.github/        @nakatya
+/CLAUDE.md       @nakatya
+/docs/GAME_DESIGN.md @nakatya
+/package.json    @nakatya
