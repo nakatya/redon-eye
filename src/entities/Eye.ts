@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { COLOR } from '../palette';
 import { DEFAULT_MOVEMENT, moveWithin, pupilOffset, stepVelocity, type Vec2 } from '../logic/movement';
 
 const RX = 28;
@@ -12,9 +13,9 @@ export class Eye extends Phaser.GameObjects.Container {
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y);
-    const white = scene.add.ellipse(0, 0, RX * 2, RY * 2, 0xd8d2c4);
-    white.setStrokeStyle(2, 0x6b6b6b);
-    this.pupil = scene.add.circle(0, 0, PUPIL_R, 0x0b0b0b);
+    const white = scene.add.ellipse(0, 0, RX * 2, RY * 2, COLOR.paper);
+    white.setStrokeStyle(2, COLOR.mid);
+    this.pupil = scene.add.circle(0, 0, PUPIL_R, COLOR.dark);
     this.add([white, this.pupil]);
     scene.add.existing(this);
   }

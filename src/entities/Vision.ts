@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { COLOR } from '../palette';
 import { DEFAULT_VISION_RADIUS, darknessAt } from '../logic/vision';
 
 const TEX_KEY = 'vision-gradient';
@@ -20,9 +21,9 @@ export class Vision {
         for (let x = 0; x < TEX_R * 2; x++) {
           const a = darknessAt(Math.hypot(x + 0.5 - TEX_R, y + 0.5 - TEX_R), TEX_R);
           const i = (y * TEX_R * 2 + x) * 4;
-          img.data[i] = 0x0b;
-          img.data[i + 1] = 0x0b;
-          img.data[i + 2] = 0x0b;
+          img.data[i] = (COLOR.dark >> 16) & 255;
+          img.data[i + 1] = (COLOR.dark >> 8) & 255;
+          img.data[i + 2] = COLOR.dark & 255;
           img.data[i + 3] = Math.round(a * 255);
         }
       }
@@ -31,7 +32,7 @@ export class Vision {
     }
     this.spot = scene.add.image(0, 0, TEX_KEY).setDepth(100);
     // テクスチャの外側を埋める4枚の黒い矩形
-    this.rects = Array.from({ length: 4 }, () => scene.add.rectangle(0, 0, 1, 1, 0x0b0b0b).setOrigin(0, 0).setDepth(100));
+    this.rects = Array.from({ length: 4 }, () => scene.add.rectangle(0, 0, 1, 1, COLOR.dark).setOrigin(0, 0).setDepth(100));
   }
 
   update(x: number, y: number): void {

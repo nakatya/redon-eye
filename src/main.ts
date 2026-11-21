@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CSS } from './palette';
 import { TitleScene } from './scenes/TitleScene';
 import { GameScene } from './scenes/GameScene';
 import { GameOverScene } from './scenes/GameOverScene';
@@ -8,7 +9,7 @@ new Phaser.Game({
   parent: 'game',
   width: 960,
   height: 540,
-  backgroundColor: '#0b0b0b',
+  backgroundColor: CSS.dark,
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

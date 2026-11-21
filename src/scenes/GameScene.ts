@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { COLOR, CSS } from '../palette';
+import { createGround } from '../entities/Ground';
 import { Eye } from '../entities/Eye';
 import { Vision } from '../entities/Vision';
 import { Mote } from '../entities/Mote';
@@ -37,15 +39,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.cameras.main.setBackgroundColor('#0b0b0b');
+    this.cameras.main.setBackgroundColor(CSS.dark);
     this.cameras.main.setBounds(0, 0, STAGE.width, STAGE.height);
     applyCharcoal(this);
+    createGround(this, STAGE);
     // 確認用の目印(後の Issue で置き換えてよい)
     const rnd = new Phaser.Math.RandomDataGenerator(['marks']);
     for (let i = 0; i < 40; i++) {
       const x = rnd.between(60, STAGE.width - 60);
       const y = rnd.between(60, STAGE.height - 60);
-      this.add.circle(x, y, rnd.between(6, 14), 0x6b6b6b);
+      this.add.circle(x, y, rnd.between(6, 14), COLOR.mid);
     }
     this.eye = new Eye(this, STAGE.width / 2, STAGE.height / 2);
     this.vision = new Vision(this, STAGE);
@@ -61,11 +64,11 @@ export class GameScene extends Phaser.Scene {
     this.startTime = this.time.now;
     this.createHearts();
     this.counter = this.add
-      .text(16, 12, '', { color: '#d8d2c4', fontSize: '22px' })
+      .text(16, 12, '', { color: CSS.paper, fontSize: '22px' })
       .setScrollFactor(0)
       .setDepth(200);
     this.timerText = this.add
-      .text(16, 40, '', { color: '#8a8578', fontSize: '16px' })
+      .text(16, 40, '', { color: CSS.dim, fontSize: '16px' })
       .setScrollFactor(0)
       .setDepth(200);
     this.refreshCounter();
@@ -123,8 +126,8 @@ export class GameScene extends Phaser.Scene {
   private createHearts(): void {
     this.hearts = [];
     for (let i = 0; i < MAX_HEALTH; i++) {
-      const white = this.add.ellipse(0, 0, 28, 18, 0xd8d2c4).setStrokeStyle(1, 0x6b6b6b);
-      const pupil = this.add.circle(0, 0, 5, 0x0b0b0b);
+      const white = this.add.ellipse(0, 0, 28, 18, COLOR.paper).setStrokeStyle(1, COLOR.mid);
+      const pupil = this.add.circle(0, 0, 5, COLOR.dark);
       const icon = this.add.container(960 - 30 - i * 36, 24, [white, pupil]).setScrollFactor(0).setDepth(200);
       this.hearts.push(icon);
     }
@@ -143,7 +146,7 @@ export class GameScene extends Phaser.Scene {
     // 開始地点から離れた位置に出す
     const [p] = placeMotes(1, STAGE, { x: this.eye.x, y: this.eye.y }, Math.random, { startDist: 600 });
     const pos = p ?? { x: 200, y: 200 };
-    this.exit = this.add.circle(pos.x, pos.y, EXIT_RADIUS, 0xd8d2c4, 0.35);
+    this.exit = this.add.circle(pos.x, pos.y, EXIT_RADIUS, COLOR.paper, 0.35);
     this.tweens.add({ targets: this.exit, alpha: { from: 0.15, to: 0.5 }, duration: 1400, yoyo: true, repeat: -1 });
   }
 }
