@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Eye } from '../entities/Eye';
+import { pointerInput } from '../logic/pointer';
 import { Vision } from '../entities/Vision';
 import { Mote } from '../entities/Mote';
 import { Shade } from '../entities/Shade';
@@ -81,8 +82,19 @@ export class GameScene extends Phaser.Scene {
     const right = this.cursors.right.isDown || this.wasd.D.isDown;
     const up = this.cursors.up.isDown || this.wasd.W.isDown;
     const down = this.cursors.down.isDown || this.wasd.S.isDown;
+    const key = { x: Number(right) - Number(left), y: Number(down) - Number(up) };
+    let input = key;
+    // キーボード入力がない間だけ、押している(触れている)ポインタへ漂う
+    if (key.x === 0 && key.y === 0) {
+      const ptr = this.input.activePointer;
+      if (ptr.isDown) {
+        // カメラのスクロールを考慮してワールド座標へ変換
+        const w = this.cameras.main.getWorldPoint(ptr.x, ptr.y);
+        input = pointerInput({ x: this.eye.x, y: this.eye.y }, { x: w.x, y: w.y }, this.eye.getVelocity());
+      }
+    }
     this.eye.step(
-      { x: Number(right) - Number(left), y: Number(down) - Number(up) },
+      input,
       Math.min(delta, 50) / 1000,
       STAGE,
     );
