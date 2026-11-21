@@ -33,6 +33,8 @@ case "$action" in
     gh pr review "$PR" --approve --body "🤖 自動進行: CI 成功、致命的な指摘なしのため承認。$reason"
     if gh pr merge "$PR" --squash --delete-branch; then
       gh workflow run deploy.yml
+      # GITHUB_TOKEN でのマージでは「Closes #N」が効かないため、明示的に閉じる
+      gh issue close "$ISSUE" --reason completed || true
       gh issue comment "$ISSUE" --body "🤖 自動進行: PR #$PR をマージして公開しました。$reason" || true
       gh workflow run orchestrator.yml   # すぐ次へ進む
     else
