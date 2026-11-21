@@ -3,6 +3,7 @@ import { Eye } from '../entities/Eye';
 import { Vision } from '../entities/Vision';
 import { Mote } from '../entities/Mote';
 import { Shade } from '../entities/Shade';
+import { formatElapsed } from '../logic/time';
 import { applyCharcoal } from '../shaders/CharcoalPipeline';
 import { SHADE_COUNT, placeShades } from '../logic/shade';
 import { MAX_HEALTH, applyHit, blinkVisible, hitsShade, initialHealth, isDead, tickHealth, type HealthState } from '../logic/health';
@@ -22,6 +23,7 @@ export class GameScene extends Phaser.Scene {
   private taken = new Set<number>();
   private exit?: Phaser.GameObjects.Arc;
   private counter!: Phaser.GameObjects.Text;
+  private timerText!: Phaser.GameObjects.Text;
   private cleared = false;
   private shades: Shade[] = [];
   private health: HealthState = initialHealth();
@@ -60,6 +62,10 @@ export class GameScene extends Phaser.Scene {
     this.createHearts();
     this.counter = this.add
       .text(16, 12, '', { color: '#d8d2c4', fontSize: '22px' })
+      .setScrollFactor(0)
+      .setDepth(200);
+    this.timerText = this.add
+      .text(16, 40, '', { color: '#8a8578', fontSize: '16px' })
       .setScrollFactor(0)
       .setDepth(200);
     this.refreshCounter();
@@ -105,6 +111,7 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     this.refreshCounter();
+    this.timerText.setText(formatElapsed((this.time.now - this.startTime) / 1000));
     if (!this.exit && isExitOpen(this.taken.size)) this.spawnExit();
     if (this.exit && !this.cleared && reachedExit(eyePos, this.exit)) {
       this.cleared = true;

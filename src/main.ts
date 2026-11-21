@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { TitleScene } from './scenes/TitleScene';
 import { GameScene } from './scenes/GameScene';
 import { GameOverScene } from './scenes/GameOverScene';
 
@@ -12,5 +13,5 @@ new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [GameScene, GameOverScene],
+  scene: [TitleScene, GameScene, GameOverScene],
 });
