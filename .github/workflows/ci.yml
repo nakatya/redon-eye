@@ -4,6 +4,8 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Autopilot が、起動しなかった PR の CI を直接動かすために使う
+  workflow_dispatch:
 
 permissions:
   contents: read
