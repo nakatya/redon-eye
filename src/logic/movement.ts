@@ -26,7 +26,7 @@ export function clampSpeed(v: Vec2, max: number): Vec2 {
   return { x: v.x * k, y: v.y * k };
 }
 
-/** 入力方向(各軸 -1..1)から速度を1ステップ進める。斜めでも加速が速くならないよう正規化する */
+/** 入力(長さ0..1のアナログ入力。1を超える分は正規化)から速度を1ステップ進める */
 export function stepVelocity(
   v: Vec2,
   input: Vec2,
@@ -34,8 +34,8 @@ export function stepVelocity(
   p: MovementParams = DEFAULT_MOVEMENT,
 ): Vec2 {
   const ilen = Math.hypot(input.x, input.y);
-  const dx = ilen > 0 ? input.x / ilen : 0;
-  const dy = ilen > 0 ? input.y / ilen : 0;
+  const dx = ilen > 1 ? input.x / ilen : input.x;
+  const dy = ilen > 1 ? input.y / ilen : input.y;
   // 指数的な減衰(フレームレートに依存しない)
   const decay = Math.exp(-p.damping * dt);
   const next = {

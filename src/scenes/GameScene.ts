@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Eye } from '../entities/Eye';
+import { pointerInput } from '../logic/pointer';
 import { Vision } from '../entities/Vision';
 import { Mote } from '../entities/Mote';
 import { Shade } from '../entities/Shade';
@@ -29,6 +30,10 @@ export class GameScene extends Phaser.Scene {
   private health: HealthState = initialHealth();
   private hearts: Phaser.GameObjects.Container[] = [];
   private startTime = 0;
+  private pointerHeldAtStart = false;
+  // 毎フレームの生成を避けるため使い回す
+  private pointerWorld = new Phaser.Math.Vector2();
+  private eyePos = new Phaser.Math.Vector2();
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
 
@@ -74,6 +79,8 @@ export class GameScene extends Phaser.Scene {
     const kb = this.input.keyboard!;
     this.cursors = kb.createCursorKeys();
     this.wasd = kb.addKeys('W,A,S,D') as typeof this.wasd;
+    // タイトル/結果画面の pointerdown で始まるため、押されたままなら離されるまでポインタ入力を無視
+    this.pointerHeldAtStart = this.input.activePointer.isDown;
   }
 
   update(_time: number, delta: number): void {
@@ -81,8 +88,24 @@ export class GameScene extends Phaser.Scene {
     const right = this.cursors.right.isDown || this.wasd.D.isDown;
     const up = this.cursors.up.isDown || this.wasd.W.isDown;
     const down = this.cursors.down.isDown || this.wasd.S.isDown;
+    const key = { x: Number(right) - Number(left), y: Number(down) - Number(up) };
+    let input = key;
+    // キーボード入力がない間だけ、押している(触れている)ポインタへ漂う
+    if (key.x === 0 && key.y === 0) {
+      const ptr = this.input.activePointer;
+      // 開始時に押されていた指・ボタンは、一度離されるまで無視する
+      if (!ptr.isDown) this.pointerHeldAtStart = false;
+      if (ptr.isDown && !this.pointerHeldAtStart) {
+        // カメラのスクロールを考慮してワールド座標へ変換
+        const w = this.cameras.main.getWorldPoint(ptr.x, ptr.y, this.pointerWorld);
+        this.eyePos.set(this.eye.x, this.eye.y);
+        input = pointerInput(this.eyePos, w, this.eye.getVelocity());
+      }
+    } else if (!this.input.activePointer.isDown) {
+      this.pointerHeldAtStart = false;
+    }
     this.eye.step(
-      { x: Number(right) - Number(left), y: Number(down) - Number(up) },
+      input,
       Math.min(delta, 50) / 1000,
       STAGE,
     );

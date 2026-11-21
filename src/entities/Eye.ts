@@ -19,6 +19,11 @@ export class Eye extends Phaser.GameObjects.Container {
     scene.add.existing(this);
   }
 
+  /** 現在の速度(読み取り専用。毎フレーム呼ばれるので新しいオブジェクトは作らない) */
+  getVelocity(): Readonly<Vec2> {
+    return this.velocity;
+  }
+
   step(input: Vec2, dtSec: number, bounds: { width: number; height: number }): void {
     this.velocity = stepVelocity(this.velocity, input, dtSec);
     const r = moveWithin({ x: this.x, y: this.y }, this.velocity, dtSec, bounds, RX);
