@@ -3,7 +3,7 @@ import { Eye } from '../entities/Eye';
 import { Vision } from '../entities/Vision';
 import { Mote } from '../entities/Mote';
 import {
-  EXIT_RADIUS, MOTE_COUNT, MOTE_GOAL, collectedIndices, isExitOpen, placeMotes, reachedExit, visionRadiusFor,
+  EXIT_RADIUS, MOTE_COUNT, MOTE_GOAL, collectedIndices, exitAlphaFor, isExitOpen, placeExit, placeMotes, reachedExit, visionRadiusFor,
 } from '../logic/motes';
 
 export const STAGE = { width: 960 * 3, height: 540 * 3 };
@@ -54,7 +54,7 @@ export class GameScene extends Phaser.Scene {
     this.wasd = kb.addKeys('W,A,S,D') as typeof this.wasd;
   }
 
-  update(_time: number, delta: number): void {
+  update(time: number, delta: number): void {
     const left = this.cursors.left.isDown || this.wasd.A.isDown;
     const right = this.cursors.right.isDown || this.wasd.D.isDown;
     const up = this.cursors.up.isDown || this.wasd.W.isDown;
@@ -65,16 +65,21 @@ export class GameScene extends Phaser.Scene {
       STAGE,
     );
     const eyePos = { x: this.eye.x, y: this.eye.y };
-    for (const i of collectedIndices(eyePos, this.moteSpots, this.taken)) {
+    const picked = collectedIndices(eyePos, this.moteSpots, this.taken);
+    for (const i of picked) {
       this.taken.add(i);
-      this.motes[i].destroy();
+      this.motes[i].fadeOutAndDestroy();
     }
+    if (picked.length > 0) this.refreshCounter();
     this.vision.radius = visionRadiusFor(this.taken.size);
-    this.refreshCounter();
     if (!this.exit && isExitOpen(this.taken.size)) this.spawnExit();
     if (this.exit && !this.cleared && reachedExit(eyePos, this.exit)) {
       this.cleared = true;
       this.scene.start('GameOverScene', { collected: this.taken.size });
+    }
+    if (this.exit) {
+      const d = Math.hypot(this.exit.x - eyePos.x, this.exit.y - eyePos.y);
+      this.exit.setAlpha(exitAlphaFor(d, Math.sin(time / 700)));
     }
     this.vision.update(this.eye.x, this.eye.y);
   }
@@ -84,10 +89,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   private spawnExit(): void {
-    // 開始地点から離れた位置に出す
-    const [p] = placeMotes(1, STAGE, { x: this.eye.x, y: this.eye.y }, Math.random, { startDist: 600 });
-    const pos = p ?? { x: 200, y: 200 };
-    this.exit = this.add.circle(pos.x, pos.y, EXIT_RADIUS, 0xd8d2c4, 0.35);
-    this.tweens.add({ targets: this.exit, alpha: { from: 0.15, to: 0.5 }, duration: 1400, yoyo: true, repeat: -1 });
+    const pos = placeExit(STAGE, { x: this.eye.x, y: this.eye.y }, Math.random);
+    // 視界オーバーレイ(depth 100)より上に描き、暗闇の中でも遠くにぼんやり見えるようにする
+    this.exit = this.add.circle(pos.x, pos.y, EXIT_RADIUS, 0xd8d2c4, 0.2).setDepth(150);
   }
 }

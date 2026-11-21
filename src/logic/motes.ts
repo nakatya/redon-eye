@@ -60,3 +60,34 @@ export function isExitOpen(collected: number): boolean {
 export function reachedExit(eye: Vec, exit: Vec): boolean {
   return touches(eye, EYE_PICKUP_RADIUS, exit, EXIT_RADIUS);
 }
+
+export const EXIT_MIN_DIST = 600;
+
+/** 出口の位置。目から minDist 以上離す。見つからなければ目から最も遠い四隅(壁から margin 内側)を使う。 */
+export function placeExit(
+  world: Size,
+  eye: Vec,
+  rng: () => number,
+  opts: { minDist?: number; margin?: number } = {},
+): Vec {
+  const { minDist = EXIT_MIN_DIST, margin = 80 } = opts;
+  for (let i = 0; i < 2000; i++) {
+    const p = {
+      x: margin + rng() * (world.width - 2 * margin),
+      y: margin + rng() * (world.height - 2 * margin),
+    };
+    if (Math.hypot(p.x - eye.x, p.y - eye.y) >= minDist) return p;
+  }
+  const corners = [margin, world.width - margin].flatMap((x) =>
+    [margin, world.height - margin].map((y) => ({ x, y })),
+  );
+  return corners.reduce((best, c) =>
+    Math.hypot(c.x - eye.x, c.y - eye.y) > Math.hypot(best.x - eye.x, best.y - eye.y) ? c : best,
+  );
+}
+
+/** 出口の不透明度。遠くはごく淡く(0.15〜0.25 で明滅)、近づくほどはっきり。pulse は -1〜1。 */
+export function exitAlphaFor(distance: number, pulse: number): number {
+  const near = Math.min(1, Math.max(0, (VISION_MAX_RADIUS - distance) / (VISION_MAX_RADIUS - EXIT_RADIUS)));
+  return 0.2 + pulse * 0.05 + near * 0.3;
+}

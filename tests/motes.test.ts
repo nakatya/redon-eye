@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  MOTE_GOAL, VISION_MAX_RADIUS, collectedIndices, isExitOpen, placeMotes, reachedExit, visionRadiusFor,
+  MOTE_GOAL, VISION_MAX_RADIUS, collectedIndices, exitAlphaFor, placeExit, isExitOpen, placeMotes, reachedExit, visionRadiusFor,
 } from '../src/logic/motes';
 
 const world = { width: 2880, height: 1620 };
@@ -49,4 +49,33 @@ describe('視界と出口', () => {
     expect(reachedExit({ x: 0, y: 0 }, { x: 30, y: 0 })).toBe(true);
     expect(reachedExit({ x: 0, y: 0 }, { x: 200, y: 0 })).toBe(false);
   });
+});
+
+describe('placeExit', () => {
+  it('目から 600px 以上離れた範囲内に置く', () => {
+    for (let seed = 1; seed <= 20; seed++) {
+      const p = placeExit(world, start, lcg(seed));
+      expect(Math.hypot(p.x - start.x, p.y - start.y)).toBeGreaterThanOrEqual(600);
+      expect(p.x).toBeGreaterThanOrEqual(80);
+      expect(p.x).toBeLessThanOrEqual(world.width - 80);
+      expect(p.y).toBeGreaterThanOrEqual(80);
+      expect(p.y).toBeLessThanOrEqual(world.height - 80);
+    }
+  });
+  it('置けない狭さでも、目から最も遠い隅に置く(目の近くにならない)', () => {
+    const small = { width: 500, height: 500 };
+    const eye = { x: 100, y: 100 };
+    expect(placeExit(small, eye, lcg(3))).toEqual({ x: 420, y: 420 });
+  });
+});
+
+describe('exitAlphaFor', () => {
+  it('遠くは 0.15〜0.25', () => {
+    for (const pulse of [-1, 0, 1]) {
+      const a = exitAlphaFor(1000, pulse);
+      expect(a).toBeGreaterThanOrEqual(0.15 - 1e-9);
+      expect(a).toBeLessThanOrEqual(0.25 + 1e-9);
+    }
+  });
+  it('近づくほど濃い', () => expect(exitAlphaFor(60, 0)).toBeGreaterThan(exitAlphaFor(500, 0)));
 });
