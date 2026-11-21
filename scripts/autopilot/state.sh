@@ -58,6 +58,23 @@ if [ "$judged" != "0" ]; then out state waiting; exit 0; fi
 run_state() { gh api "repos/$REPO/commits/$sha/check-runs" -q "[.check_runs[]|select(.name==\"$1\")]|first // {} | \"\(.status // \"none\")/\(.conclusion // \"none\")\""; }
 ci=$(run_state check); rv=$(run_state review)
 echo "check=$ci review=$rv"
+
+# CI やレビューが一度も始まっていない head(bot の push で起動しなかった等)は、5分待ってから直接起動する
+if [ "$ci" = "none/none" ] || [ "$rv" = "none/none" ]; then
+  committed=$(gh api "repos/$REPO/commits/$sha" -q .commit.committer.date)
+  age_min=$(( ( $(date +%s) - $(date -d "$committed" +%s) ) / 60 ))
+  kicked=$(gh api "repos/$REPO/issues/$pr/comments" --paginate -q "[.[]|select(.body|contains(\"<!-- autopilot:kick:$sha -->\"))]|length")
+  if [ "$age_min" -ge 5 ] && [ "$kicked" = "0" ]; then
+    [ "$ci" = "none/none" ] && gh workflow run ci.yml --ref "$branch"
+    [ "$rv" = "none/none" ] && gh workflow run claude-review.yml --ref "$branch" -f pr="$pr"
+    gh pr comment "$pr" --body "🤖 自動進行: この commit で CI / レビューが起動していなかったので、直接起動しました。<!-- autopilot:kick:$sha -->"
+  elif [ "$age_min" -ge 30 ] && [ "$kicked" != "0" ]; then
+    gh issue edit "$target" --add-label needs-human
+    gh issue comment "$target" --body "🤖 自動進行: PR #$pr の CI / レビューが起動しません。Actions を確認してください。"
+    out state blocked; exit 0
+  fi
+  out state waiting; exit 0
+fi
 case "$ci" in completed/*) ;; *) out state waiting; exit 0;; esac
 case "$rv" in completed/*) ;; *) out state waiting; exit 0;; esac
 if [ "$ci" != "completed/success" ]; then out state cifail; exit 0; fi

@@ -10,7 +10,8 @@ name: Autopilot
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    # 0分・15分ちょうどは混雑して遅延・欠落しやすいのでずらす
+    - cron: "7,22,37,52 * * * *"
   workflow_run:
     workflows: [CI, Claude Review, Claude]
     types: [completed]

@@ -4,6 +4,13 @@ name: Claude Review
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review]
+  # Autopilot が、起動しなかった PR のレビューを直接動かすために使う(PR のブランチを ref に指定して呼ぶ)
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "レビューする PR 番号"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -12,12 +19,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: claude-review-${{ github.event.pull_request.number }}
+  group: claude-review-${{ github.event.pull_request.number || inputs.pr }}
   cancel-in-progress: true
 
 jobs:
   review:
-    if: github.event.pull_request.draft == false
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -34,9 +41,9 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # Claude が作った PR もレビューする(bot 起動のイベントは標準では拒否されるため)
-          allowed_bots: "claude,claude[bot]"
+          allowed_bots: "claude,claude[bot],github-actions,github-actions[bot]"
           prompt: |
-            リポジトリ ${{ github.repository }} の PR #${{ github.event.pull_request.number }} をレビューしてください。
+            リポジトリ ${{ github.repository }} の PR #${{ github.event.pull_request.number || inputs.pr }} をレビューしてください。
             実装者とは別の目で、次の観点を見ること。
             1. 対応する Issue の受け入れ条件を満たしているか
             2. CLAUDE.md の規約(ロジックを src/logic/ に分離、テストの有無、依存追加の理由)
