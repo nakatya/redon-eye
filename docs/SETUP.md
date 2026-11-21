@@ -50,3 +50,20 @@ Issue を読む → 「approved」ラベルを付ける            ← 人(ス�
 - 最初は Issue #1 だけに `approved` を付け、結果を見てから次に進む。並行して何本も走らせない。
 - #3(光)と #6(質感)は見た目の要なので、必ず自分の目で見てからマージする。
 - 慣れたら、Claude Code のクラウドのスケジュール実行(Routines)で「毎朝、承認済みで未着手の Issue を1本進める」ようにすると、PC を開かずに進みます。
+
+## 4. 自動進行(Autopilot)
+
+`.github/workflows/orchestrator.yml` が、PC を開いていなくても GitHub 上で開発を進めます。
+
+- 15分おき、または CI・レビュー・Claude のワークフローが終わるたびに動きます
+- `game` ラベルの open な Issue を番号順に1本ずつ、承認 → 実装 → CI とレビュー → 判断 → 承認してマージ、まで進めます
+- 判断は Claude が行います。致命的な指摘があれば同じ PR で直させ(2回まで)、後で直すべき指摘は `auto` ラベルの Issue にします(通算 8 本まで)
+- 人を呼ぶとき: Issue に `needs-human` ラベルとコメントが付きます(GitHub の通知が届きます)。答えたら `needs-human` を外すと再開します
+- `.github/`、`CLAUDE.md`、`docs/GAME_DESIGN.md`、`package.json`、`scripts/` を変える PR は自動ではマージできず、人を呼びます
+
+止め方:
+- 一時停止: Settings → Secrets and variables → Actions → Variables に `AUTOPILOT` = `off` を作る(`on` に戻すか削除で再開)
+- 特定の Issue を飛ばす: `hold` ラベルを付ける
+- 完全停止: Actions タブ → Autopilot → Disable workflow
+
+必要な設定: Settings → Actions → General → Workflow permissions の「Allow GitHub Actions to create and approve pull requests」をオン
