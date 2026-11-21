@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { COLOR } from '../palette';
 import { SHADE_RADIUS, clampToStage, shadeVelocity } from '../logic/shade';
 
 /** 輪郭のぼやけた黒い不定形。ゆらゆら揺れる */
@@ -11,7 +12,7 @@ export class Shade extends Phaser.GameObjects.Container {
     super(scene, x, y);
     // 大きさの違う半透明の円を重ねて、ぼやけた輪郭を作る
     for (const [s, a] of [[1.35, 0.15], [1.15, 0.25], [0.95, 0.5], [0.7, 0.95]] as const) {
-      const c = scene.add.circle(0, 0, SHADE_RADIUS * s, 0x000000, a);
+      const c = scene.add.circle(0, 0, SHADE_RADIUS * s, COLOR.black, a);
       this.blobs.push(c);
       this.add(c);
     }
