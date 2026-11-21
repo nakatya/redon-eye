@@ -18,6 +18,23 @@ describe('stepVelocity', () => {
     expect(Math.abs(v.x)).toBeLessThan(0.1);
   });
 
+  it('入力 0.5 の加速は入力 1 の半分(アナログ入力)', () => {
+    const full = stepVelocity(zero, { x: 1, y: 0 }, 0.1);
+    const half = stepVelocity(zero, { x: 0.5, y: 0 }, 0.1);
+    expect(half.x).toBeCloseTo(full.x / 2);
+  });
+
+  it('斜め (1,1) は正規化され、軸方向 1 と同じ加速になる', () => {
+    const axis = stepVelocity(zero, { x: 1, y: 0 }, 0.1);
+    const diag = stepVelocity(zero, { x: 1, y: 1 }, 0.1);
+    expect(Math.hypot(diag.x, diag.y)).toBeCloseTo(axis.x);
+    expect(diag.x).toBeCloseTo(diag.y);
+  });
+
+  it('入力 0 では加速しない', () => {
+    expect(stepVelocity(zero, zero, 0.1)).toEqual(zero);
+  });
+
   it('最大速度を超えない(斜めでも)', () => {
     let v = zero;
     for (let i = 0; i < 600; i++) v = stepVelocity(v, { x: 1, y: 1 }, 1 / 60);

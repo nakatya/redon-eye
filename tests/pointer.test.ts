@@ -45,4 +45,22 @@ describe('pointerInput', () => {
     expect(Math.abs(vel.x)).toBeLessThan(5);
     expect(signChanges).toBeLessThanOrEqual(1);
   });
+  it('デッドゾーン付近を速度が残ったまま通過しても、小さく往復し続けない', () => {
+    let pos = { x: -20, y: 0 };
+    let vel = { x: 220, y: 0 };
+    const target = o;
+    const dt = 1 / 60;
+    let signChanges = 0;
+    let prevSign = Math.sign(target.x - pos.x);
+    for (let i = 0; i < 60 * 15; i++) {
+      vel = stepVelocity(vel, pointerInput(pos, target, vel), dt, DEFAULT_MOVEMENT);
+      pos = moveWithin(pos, vel, dt, { width: 5000, height: 5000 }, -5000).pos;
+      const s = Math.sign(target.x - pos.x) || prevSign;
+      if (s !== prevSign) signChanges++;
+      prevSign = s;
+    }
+    expect(signChanges).toBeLessThanOrEqual(2);
+    expect(Math.abs(pos.x - target.x)).toBeLessThan(DEFAULT_POINTER.deadZone * 3);
+    expect(Math.abs(vel.x)).toBeLessThan(5);
+  });
 });

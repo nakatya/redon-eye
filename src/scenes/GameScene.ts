@@ -30,6 +30,10 @@ export class GameScene extends Phaser.Scene {
   private health: HealthState = initialHealth();
   private hearts: Phaser.GameObjects.Container[] = [];
   private startTime = 0;
+  private pointerHeldAtStart = false;
+  // 毎フレームの生成を避けるため使い回す
+  private pointerWorld = new Phaser.Math.Vector2();
+  private eyePos = new Phaser.Math.Vector2();
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
 
@@ -75,6 +79,8 @@ export class GameScene extends Phaser.Scene {
     const kb = this.input.keyboard!;
     this.cursors = kb.createCursorKeys();
     this.wasd = kb.addKeys('W,A,S,D') as typeof this.wasd;
+    // タイトル/結果画面の pointerdown で始まるため、押されたままなら離されるまでポインタ入力を無視
+    this.pointerHeldAtStart = this.input.activePointer.isDown;
   }
 
   update(_time: number, delta: number): void {
@@ -87,11 +93,16 @@ export class GameScene extends Phaser.Scene {
     // キーボード入力がない間だけ、押している(触れている)ポインタへ漂う
     if (key.x === 0 && key.y === 0) {
       const ptr = this.input.activePointer;
-      if (ptr.isDown) {
+      // 開始時に押されていた指・ボタンは、一度離されるまで無視する
+      if (!ptr.isDown) this.pointerHeldAtStart = false;
+      if (ptr.isDown && !this.pointerHeldAtStart) {
         // カメラのスクロールを考慮してワールド座標へ変換
-        const w = this.cameras.main.getWorldPoint(ptr.x, ptr.y);
-        input = pointerInput({ x: this.eye.x, y: this.eye.y }, { x: w.x, y: w.y }, this.eye.getVelocity());
+        const w = this.cameras.main.getWorldPoint(ptr.x, ptr.y, this.pointerWorld);
+        this.eyePos.set(this.eye.x, this.eye.y);
+        input = pointerInput(this.eyePos, w, this.eye.getVelocity());
       }
+    } else if (!this.input.activePointer.isDown) {
+      this.pointerHeldAtStart = false;
     }
     this.eye.step(
       input,
