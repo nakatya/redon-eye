@@ -38,6 +38,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: sakurai スキルを読み込む(コミット固定)
+        run: |
+          git clone -q https://github.com/kociden/sakurai-skill /tmp/sakurai-skill
+          git -C /tmp/sakurai-skill checkout -q 913dc46b9dedc5e0b12e3834d25d684cf8213f87
+          mkdir -p .claude/skills
+          cp -r /tmp/sakurai-skill/skills/sakurai .claude/skills/
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -50,7 +56,7 @@ jobs:
             - CLAUDE.md の「止まって人に聞くべきこと」に当たる場合は、実装せずに Issue に質問を書き、needs-human ラベルを付けて終了する
           claude_args: |
             --max-turns 60
-            --allowedTools "Edit,Write,Read,Glob,Grep,Bash(npm:*),Bash(npx:*),Bash(git:*),Bash(gh pr:*),Bash(gh issue:*)"
+            --allowedTools "Skill,Edit,Write,Read,Glob,Grep,Bash(npm:*),Bash(npx:*),Bash(git:*),Bash(gh pr:*),Bash(gh issue:*)"
 
   respond:
     if: >
@@ -66,9 +72,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: sakurai スキルを読み込む(コミット固定)
+        run: |
+          git clone -q https://github.com/kociden/sakurai-skill /tmp/sakurai-skill
+          git -C /tmp/sakurai-skill checkout -q 913dc46b9dedc5e0b12e3834d25d684cf8213f87
+          mkdir -p .claude/skills
+          cp -r /tmp/sakurai-skill/skills/sakurai .claude/skills/
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: |
             --max-turns 40
-            --allowedTools "Edit,Write,Read,Glob,Grep,Bash(npm:*),Bash(npx:*),Bash(git:*),Bash(gh pr:*),Bash(gh issue:*)"
+            --allowedTools "Skill,Edit,Write,Read,Glob,Grep,Bash(npm:*),Bash(npx:*),Bash(git:*),Bash(gh pr:*),Bash(gh issue:*)"
