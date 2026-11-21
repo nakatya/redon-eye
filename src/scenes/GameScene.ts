@@ -3,6 +3,7 @@ import { Eye } from '../entities/Eye';
 import { Vision } from '../entities/Vision';
 import { Mote } from '../entities/Mote';
 import { Shade } from '../entities/Shade';
+import { applyCharcoal } from '../shaders/CharcoalPipeline';
 import { SHADE_COUNT, placeShades } from '../logic/shade';
 import { MAX_HEALTH, applyHit, blinkVisible, hitsShade, initialHealth, isDead, tickHealth, type HealthState } from '../logic/health';
 import { SHADE_RADIUS } from '../logic/shade';
@@ -36,6 +37,7 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     this.cameras.main.setBackgroundColor('#0b0b0b');
     this.cameras.main.setBounds(0, 0, STAGE.width, STAGE.height);
+    applyCharcoal(this);
     // 確認用の目印(後の Issue で置き換えてよい)
     const rnd = new Phaser.Math.RandomDataGenerator(['marks']);
     for (let i = 0; i < 40; i++) {
