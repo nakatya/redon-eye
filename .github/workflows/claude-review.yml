@@ -21,12 +21,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Claude が作った PR もレビューする(bot 起動のイベントは標準では拒否されるため)
+          allowed_bots: "claude,claude[bot]"
           prompt: |
             リポジトリ ${{ github.repository }} の PR #${{ github.event.pull_request.number }} をレビューしてください。
             実装者とは別の目で、次の観点を見ること。
